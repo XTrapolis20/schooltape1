@@ -1,5 +1,42 @@
 # Changelog
 
+## [4.5.3](https://github.com/schooltape/schooltape/compare/v4.5.2...v4.5.3) (2026-05-05)
+
+
+### Bug Fixes
+
+* **plugins/homepageSwitcher:** closing current tab if none found ([#385](https://github.com/schooltape/schooltape/issues/385)) ([c1f2abc](https://github.com/schooltape/schooltape/commit/c1f2abcaf7b6dd339199f9a5d67dc6edbdc4d038))
+
+## [4.5.2](https://github.com/schooltape/schooltape/compare/v4.5.1...v4.5.2) (2026-04-30)
+
+
+### Bug Fixes
+
+* **plugins/homepageSwitcher:** switching tab regression ([#382](https://github.com/schooltape/schooltape/issues/382)) ([9063adf](https://github.com/schooltape/schooltape/commit/9063adf0862b789eaff559dd1d738472cd830ae1))
+
+## [4.5.1](https://github.com/schooltape/schooltape/compare/v4.5.0...v4.5.1) (2026-04-30)
+
+
+### Bug Fixes
+
+* **theme:** breadcrumb colours ([#380](https://github.com/schooltape/schooltape/issues/380)) ([41e4b9e](https://github.com/schooltape/schooltape/commit/41e4b9e1d269dcdfe35e343c6bc0ada5f2af3a60))
+* **themes:** style news title separator ([f397964](https://github.com/schooltape/schooltape/commit/f397964166da9b083fceecc06e5fa4163187451e))
+
+## [4.5.0](https://github.com/schooltape/schooltape/compare/v4.4.4...v4.5.0) (2026-03-20)
+
+
+### Features
+
+* **plugins:** init iframeNewTab ([#365](https://github.com/schooltape/schooltape/issues/365)) ([a06bfff](https://github.com/schooltape/schooltape/commit/a06bfff6cc319baada57fe16e2d0b427b12593c5))
+
+## [4.4.4](https://github.com/schooltape/schooltape/compare/v4.4.3...v4.4.4) (2026-03-10)
+
+
+### Bug Fixes
+
+* **popup:** improve visibility of accent selector ([b619e29](https://github.com/schooltape/schooltape/commit/b619e29df8ed1e2eab8bfeb3ad9d3a91a6b126a9))
+* **popup:** reactivity of gradient ([a28bc16](https://github.com/schooltape/schooltape/commit/a28bc168231cadeeddd7a44861e0ebb4bbd3a2c8))
+
 ## [4.4.3](https://github.com/schooltape/schooltape/compare/v4.4.2...v4.4.3) (2026-02-26)
 
 

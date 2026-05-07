@@ -1,9 +1,9 @@
 import type { Browser } from "#imports";
 import { browser, defineBackground, storage } from "#imports";
+import type { Settings as LogoSettings } from "@/entrypoints/plugins/changeLogo";
 import { logger } from "@/utils/logger";
 import type { BackgroundMessage } from "@/utils/storage";
 import { globalSettings, updated } from "@/utils/storage";
-import type { Settings as LogoSettings } from "@/entrypoints/plugins/changeLogo";
 import semver from "semver";
 
 export default defineBackground(() => {
@@ -75,23 +75,22 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener(async (msg: BackgroundMessage, sender: Browser.runtime.MessageSender) => {
     logger.info("[background] received message", { message: msg, sender });
 
-    switch (msg.type) {
-      case "resetSettings":
-        resetSettings();
-        break;
-      case "updateIcon":
-        updateIcon();
-        break;
-      case "closeTab":
-        if (!sender.tab?.id) break;
-        browser.tabs.remove(sender.tab.id);
-        break;
-      case "updateTabUrl":
-        if (!sender.tab?.id) break;
+    if (msg.type === "resetSettings") {
+      resetSettings();
+    } else if (msg.type === "updateIcon") {
+      updateIcon();
+    } else if (msg.type === "toTab") {
+      const toTab = await browser.tabs.query({ url: msg.url });
+      if (toTab.length > 0) {
+        browser.tabs.update(toTab[0].id, { active: true });
+        if (msg.closeIfFound && sender.tab?.id && sender.tab.id !== toTab[0].id) {
+          browser.tabs.remove(sender.tab.id);
+        }
+      } else if (sender.tab?.id) {
         browser.tabs.update(sender.tab.id, { url: msg.url });
-        break;
-      default:
-        logger.error(`[background] unknown message received: ${msg}`);
+      }
+    } else {
+      logger.error(`[background] unknown message received: ${msg}`);
     }
 
     return true; // return success
