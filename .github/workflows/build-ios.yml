@@ -26,13 +26,10 @@ jobs:
       run: bun install
 
     - name: Compile Extension Code
-      run: |
-        # Run the project's default build command to output compiled files
-        bun run build
+      run: bun run build
 
     - name: Convert Compiled Output to Safari Project
       run: |
-        # Look inside the exact folder structure where WXT drops compiled code
         TARGET_DIR="."
         if [ -d ".output/chrome-mv3" ]; then
           TARGET_DIR=".output/chrome-mv3"
@@ -42,9 +39,11 @@ jobs:
           TARGET_DIR="dist"
         fi
         
+        # Added --force flag to stop interactive terminal prompt locks
         xcrun safari-web-extension-converter "$TARGET_DIR" \
           --ios-only \
           --no-open \
+          --force \
           --project-location ./OutputProject \
           --app-name "SchooltapeSafari"
 
