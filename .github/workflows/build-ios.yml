@@ -1,0 +1,61 @@
+name: Build Safari iOS Extension
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Allows you to run this manually from the Actions tab
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode Version
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 'latest'
+
+    - name: Convert Chrome Extension to Safari
+      run: |
+        # Runs Apple's packager to convert the root folder (.) into a native iOS project
+        xcrun safari-web-extension-converter . \
+          --ios-only \
+          --no-open \
+          --project-location ./OutputProject \
+          --app-name "MySafariExtension"
+
+    - name: Build and Archive Project
+      run: |
+        cd OutputProject/MySafariExtension
+        
+        # Compiles the workspace and creates an iOS archive without checking for code-signing keys
+        xcodebuild archive \
+          -project MySafariExtension.xcodeproj \
+          -scheme "MySafariExtension (iOS)" \
+          -archivePath build/MySafariExtension.xcarchive \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGN_IDENTITY="" \
+          PROVISIONING_PROFILE_SPECIFIER=""
+
+    - name: Package App and Extension Bundle into IPA
+      run: |
+        cd OutputProject/MySafariExtension
+        
+        # Prepares the standard iOS Payload architecture required for sideloading tools
+        mkdir -p build/Payload
+        
+        # Copies the main application bundle containing the nested .appex extension inside it
+        cp -r build/MySafariExtension.xcarchive/Products/Applications/MySafariExtension.app build/Payload/
+        
+        # Compresses the Payload into an installable .ipa file
+        cd build
+        zip -r MySafariExtension.ipa Payload
+
+    - name: Upload Unsigned IPA to GitHub Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: MySafariExtension-Unsigned-IPA
+        path: OutputProject/MySafariExtension/build/MySafariExtension.ipa
