@@ -28,22 +28,8 @@ jobs:
     - name: Compile Extension Code
       run: bun run build
 
-    - name: Debug Output Folders
-      run: |
-        echo "=== Checking Output Directories ==="
-        ls -la
-        if [ -d ".output" ]; then
-          echo "=== Inside .output ==="
-          ls -la .output
-        fi
-        if [ -d "dist" ]; then
-          echo "=== Inside dist ==="
-          ls -la dist
-        fi
-
     - name: Convert Compiled Output to Safari Project
       run: |
-        # Locate the exact directory holding manifest.json dynamically
         TARGET_DIR=""
         if [ -f ".output/chrome-mv3/manifest.json" ]; then
           TARGET_DIR=".output/chrome-mv3"
@@ -52,17 +38,9 @@ jobs:
         elif [ -f "dist/manifest.json" ]; then
           TARGET_DIR="dist"
         else
-          # Fallback search for any built folder containing a manifest file
           TARGET_DIR=$(find . -name "manifest.json" -not -path "*/node_modules/*" -not -path "./OutputProject/*" | head -n 1 | xargs dirname)
         fi
         
-        echo "Target extension folder located at: $TARGET_DIR"
-        
-        if [ -z "$TARGET_DIR" ] || [ "$TARGET_DIR" = "." ]; then
-          echo "Error: Could not locate compiled extension build files. Using root folder fallback."
-          TARGET_DIR="."
-        fi
-
         xcrun safari-web-extension-converter "$TARGET_DIR" \
           --ios-only \
           --no-open \
@@ -74,9 +52,10 @@ jobs:
       run: |
         cd OutputProject/SchooltapeSafari
         
+        # Updated scheme target from "SchooltapeSafari (iOS)" to "SchooltapeSafari"
         xcodebuild archive \
           -project SchooltapeSafari.xcodeproj \
-          -scheme "SchooltapeSafari (iOS)" \
+          -scheme "SchooltapeSafari" \
           -archivePath build/SchooltapeSafari.xcarchive \
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO \
