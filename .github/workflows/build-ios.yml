@@ -3,7 +3,7 @@ name: Build Safari iOS Extension
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Allows you to run this manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,45 +17,57 @@ jobs:
       with:
         xcode-version: 'latest'
 
-    - name: Convert Chrome Extension to Safari
+    - name: Install Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+
+    - name: Install Dependencies and Build Web Project
       run: |
-        # Runs Apple's packager to convert the root folder (.) into a native iOS project
-        xcrun safari-web-extension-converter . \
+        # Schooltape uses bun to compile its source files
+        bun install
+        bun run build
+
+    - name: Convert Compiled Extension to Safari
+      run: |
+        # Look for the compiled production folder output (usually .output/chrome-mv3)
+        # If .output/chrome-mv3 doesn't exist, it falls back to checking the main directory.
+        TARGET_DIR="."
+        if [ -d ".output/chrome-mv3" ]; then
+          TARGET_DIR=".output/chrome-mv3"
+        elif [ -d "dist" ]; then
+          TARGET_DIR="dist"
+        fi
+        
+        xcrun safari-web-extension-converter "$TARGET_DIR" \
           --ios-only \
           --no-open \
           --project-location ./OutputProject \
-          --app-name "MySafariExtension"
+          --app-name "SchooltapeSafari"
 
     - name: Build and Archive Project
       run: |
-        cd OutputProject/MySafariExtension
+        cd OutputProject/SchooltapeSafari
         
-        # Compiles the workspace and creates an iOS archive without checking for code-signing keys
         xcodebuild archive \
-          -project MySafariExtension.xcodeproj \
-          -scheme "MySafariExtension (iOS)" \
-          -archivePath build/MySafariExtension.xcarchive \
+          -project SchooltapeSafari.xcodeproj \
+          -scheme "SchooltapeSafari (iOS)" \
+          -archivePath build/SchooltapeSafari.xcarchive \
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGN_IDENTITY="" \
           PROVISIONING_PROFILE_SPECIFIER=""
 
-    - name: Package App and Extension Bundle into IPA
+    - name: Package Bundle into IPA
       run: |
-        cd OutputProject/MySafariExtension
-        
-        # Prepares the standard iOS Payload architecture required for sideloading tools
+        cd OutputProject/SchooltapeSafari
         mkdir -p build/Payload
-        
-        # Copies the main application bundle containing the nested .appex extension inside it
-        cp -r build/MySafariExtension.xcarchive/Products/Applications/MySafariExtension.app build/Payload/
-        
-        # Compresses the Payload into an installable .ipa file
+        cp -r build/SchooltapeSafari.xcarchive/Products/Applications/SchooltapeSafari.app build/Payload/
         cd build
-        zip -r MySafariExtension.ipa Payload
+        zip -r SchooltapeSafari.ipa Payload
 
     - name: Upload Unsigned IPA to GitHub Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: MySafariExtension-Unsigned-IPA
-        path: OutputProject/MySafariExtension/build/MySafariExtension.ipa
+        name: Schooltape-Unsigned-IPA
+        path: OutputProject/SchooltapeSafari/build/SchooltapeSafari.ipa
