@@ -22,33 +22,21 @@ jobs:
       with:
         bun-version: latest
 
-    - name: Install Dependencies and Build Web Project
-      run: |
-        bun install
-        bun run build
+    - name: Install Dependencies
+      run: bun install
 
-    - name: Convert Compiled Extension to Safari
+    - name: Compile Extension for Safari iOS
       run: |
-        TARGET_DIR="."
-        if [ -d ".output/chrome-mv3" ]; then
-          TARGET_DIR=".output/chrome-mv3"
-        elif [ -d "dist" ]; then
-          TARGET_DIR="dist"
-        fi
-        
-        xcrun safari-web-extension-converter "$TARGET_DIR" \
-          --ios-only \
-          --no-open \
-          --project-location ./OutputProject \
-          --app-name "SchooltapeSafari"
+        # Tells the WXT framework to build the native Xcode project directly
+        bun run build --browser safari-ios
 
     - name: Build and Archive Project
       run: |
-        cd OutputProject/SchooltapeSafari
+        # WXT outputs its native Xcode project to .output/safari-ios
+        cd .output/safari-ios
         
-        # Added GCC_TREAT_WARNINGS_AS_ERRORS=NO and COMPILER_INDEX_STORE_ENABLE=NO to bypass code 65
         xcodebuild archive \
-          -project SchooltapeSafari.xcodeproj \
+          -project *.xcodeproj \
           -scheme "SchooltapeSafari (iOS)" \
           -archivePath build/SchooltapeSafari.xcarchive \
           CODE_SIGNING_ALLOWED=NO \
@@ -60,9 +48,9 @@ jobs:
 
     - name: Package Bundle into IPA
       run: |
-        cd OutputProject/SchooltapeSafari
+        cd .output/safari-ios
         mkdir -p build/Payload
-        cp -r build/SchooltapeSafari.xcarchive/Products/Applications/SchooltapeSafari.app build/Payload/
+        cp -r build/SchooltapeSafari.xcarchive/Products/Applications/*.app build/Payload/
         cd build
         zip -r SchooltapeSafari.ipa Payload
 
@@ -70,4 +58,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Schooltape-Unsigned-IPA
-        path: OutputProject/SchooltapeSafari/build/SchooltapeSafari.ipa
+        path: .output/safari-ios/build/SchooltapeSafari.ipa
