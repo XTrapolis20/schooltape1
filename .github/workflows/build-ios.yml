@@ -25,18 +25,35 @@ jobs:
     - name: Install Dependencies
       run: bun install
 
-    - name: Compile Extension for Safari iOS
+    - name: Compile Extension Code
       run: |
-        # Tells the WXT framework to build the native Xcode project directly
-        bun run build --browser safari-ios
+        # Run the project's default build command to output compiled files
+        bun run build
+
+    - name: Convert Compiled Output to Safari Project
+      run: |
+        # Look inside the exact folder structure where WXT drops compiled code
+        TARGET_DIR="."
+        if [ -d ".output/chrome-mv3" ]; then
+          TARGET_DIR=".output/chrome-mv3"
+        elif [ -d ".output" ]; then
+          TARGET_DIR=".output"
+        elif [ -d "dist" ]; then
+          TARGET_DIR="dist"
+        fi
+        
+        xcrun safari-web-extension-converter "$TARGET_DIR" \
+          --ios-only \
+          --no-open \
+          --project-location ./OutputProject \
+          --app-name "SchooltapeSafari"
 
     - name: Build and Archive Project
       run: |
-        # WXT outputs its native Xcode project to .output/safari-ios
-        cd .output/safari-ios
+        cd OutputProject/SchooltapeSafari
         
         xcodebuild archive \
-          -project *.xcodeproj \
+          -project SchooltapeSafari.xcodeproj \
           -scheme "SchooltapeSafari (iOS)" \
           -archivePath build/SchooltapeSafari.xcarchive \
           CODE_SIGNING_ALLOWED=NO \
@@ -48,7 +65,7 @@ jobs:
 
     - name: Package Bundle into IPA
       run: |
-        cd .output/safari-ios
+        cd OutputProject/SchooltapeSafari
         mkdir -p build/Payload
         cp -r build/SchooltapeSafari.xcarchive/Products/Applications/*.app build/Payload/
         cd build
@@ -58,4 +75,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Schooltape-Unsigned-IPA
-        path: .output/safari-ios/build/SchooltapeSafari.ipa
+        path: OutputProject/SchooltapeSafari/build/SchooltapeSafari.ipa
